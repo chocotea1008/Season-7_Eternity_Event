@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>이터널리턴 시즌7 이터니티 마무리 이벤트 (Content Visible Fix)</title>
+    <style>
+      /* --- Base Styles --- */
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap");
+
+      :root {
+        --main-accent-color: #b41c51;
+        --background-color: #0a0a0a;
+        --text-color: #e8e8e8;
+        --text-muted-color: #a0a0a0;
+        --section-min-height: 90vh;
+        --animation-duration: 0.7s; /* 애니메이션 기본 지속시간 단축 */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        line-height: 1.8;
+        text-align: center;
+        overflow-x: hidden;
+        background: linear-gradient(135deg, #1a050d, #0a0a0a, #1a050d, #2c0a16);
+        background-size: 400% 400%;
+        animation: gradient-bg 18s ease infinite;
+      }
+      @keyframes gradient-bg {
+        /* ... 이전과 동일 ... */
+      }
+
+      .event-container {
+        width: 100%;
+        perspective: 1000px;
+      }
+
+      /* --- Section Styles --- */
+      .event-section {
+        min-height: var(--section-min-height);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 60px 20px;
+        position: relative;
+        /* overflow: hidden; /* 잠시 주석 처리하여 문제 확인 */
+      }
+      .hero-section {
+        min-height: 100vh;
+      }
+
+      /* --- Scroll Animation Base --- */
+      .scroll-animate {
+        opacity: 0; /* 기본 숨김 */
+        transition: opacity 0.5s ease-out; /* 페이드인 시간 단축 */
+        /* 기본적으로 애니메이션 적용 안함, .visible에서 적용 */
+        /* transform: translateY(20px); */
+      }
+      .scroll-animate.visible {
+        opacity: 1;
+        /* transform: translateY(0); */
+      }
+
+      /* --- Hero Section --- */
+      .logo-perspective-container {
+        perspective: 800px;
+        margin-bottom: 35px;
+      }
+      .eternity-logo {
+        display: block;
+        width: 180px;
+        height: 180px;
+        object-fit: contain;
+        border-radius: 25px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        src: "https://via.placeholder.com/180x180/B41C51/FFFFFF?text=Eternity+Logo";
+        /* 초기 상태 */
+        opacity: 0;
+        transform: rotateY(30deg) rotateX(10deg) scale(0.8);
+        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1) 0.1s,
+          /* 약간의 딜레이 */ opacity 0.6s ease-out 0.1s, box-shadow 0.4s ease; /* 속도 개선 */
+      }
+      .scroll-animate.visible .eternity-logo {
+        opacity: 1;
+        transform: rotateY(0deg) rotateX(0deg) scale(1);
+      }
+      .eternity-logo:hover {
+        /* 호버 효과 개선 */
+        transform: scale(1.05) rotateY(-5deg);
+        box-shadow: 0 15px 50px rgba(180, 28, 81, 0.4);
+      }
+
+      h1 {
+        font-size: 3.2em;
+        color: var(--main-accent-color);
+        margin-bottom: 25px;
+        font-weight: 900;
+        letter-spacing: -1.5px;
+        line-height: 1.3;
+        opacity: 1 !important; /* 내부 span 애니메이션 위해 항상 보이게 */
+      }
+      h1 .char {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(40px) rotateZ(10deg) scale(0.8);
+        transition: opacity 0.4s cubic-bezier(0.215, 0.61, 0.355, 1),
+          transform 0.5s cubic-bezier(0.215, 0.61, 0.355, 1); /* 속도 개선 */
+        will-change: transform, opacity;
+        /* transition-delay는 JS에서 적용 */
+      }
+      .scroll-animate.visible h1 .char {
+        opacity: 1;
+        transform: translateY(0) rotateZ(0deg) scale(1);
+      }
+
+      .subtitle {
+        font-size: 1.3em;
+        color: var(--text-muted-color);
+        max-width: 600px;
+        margin: 0 auto;
+        /* 초기 상태 */
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.5s ease-out 0.4s, transform 0.5s ease-out 0.4s; /* 딜레이 줄임 */
+        will-change: transform, opacity;
+      }
+      .scroll-animate.visible .subtitle {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* --- !!! Content Sections - 수정된 부분 !!! --- */
+      .content-section:not(:first-child):not(:last-child) {
+        /* Hero와 Motto 제외한 섹션 */
+        /* 여기에 필요한 부모 애니메이션 스타일 추가 가능 */
+        position: relative;
+        overflow: visible;
+      }
+
+      .content-wrapper {
+        /* content-wrapper 자체 애니메이션 단순화 */
+        max-width: 700px;
+        background-color: rgba(20, 20, 20, 0.7);
+        padding: 50px 60px;
+        border-radius: 15px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+        position: relative; /* p 태그 위치 기준 */
+        backdrop-filter: blur(10px); /* 유리 효과 추가 */
+
+        /* 초기 상태: 투명하고 약간 아래 */
+        opacity: 0;
+        transform: translateY(40px);
+        /* transition 설정: 섹션(.visible)이 나타난 후 약간 뒤 시작 */
+        transition: opacity 0.6s ease-out 0.2s, transform 0.6s ease-out 0.2s; /* 속도 개선 */
+        will-change: opacity, transform;
+      }
+
+      /* 짝수 섹션은 다른 방향에서 등장 */
+      .content-section:nth-child(even) .content-wrapper {
+        transform: translateX(40px); /* 오른쪽에서 들어오는 효과 */
+      }
+      .content-section:nth-child(odd) .content-wrapper {
+        transform: translateX(-40px); /* 왼쪽에서 들어오는 효과 */
+      }
+
+      /* .visible 상태 */
+      .scroll-animate.visible .content-wrapper {
+        opacity: 1;
+        transform: translateX(0) translateY(0);
+      }
+
+      /* 내용 P 태그 애니메이션 */
+      .content-wrapper p {
+        font-size: 1.15em;
+        margin-bottom: 1.8em;
+        color: var(--text-color);
+
+        /* 초기 상태: 투명하고 약간 아래 */
+        opacity: 0;
+        transform: translateY(25px);
+        transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* 속도 개선 */
+        will-change: opacity, transform;
+        /* transition-delay는 JS에서 설정 */
+      }
+      .content-wrapper p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* P 태그 .visible 상태 (JS에서 delay와 함께 적용될 최종 모습) */
+      .scroll-animate.visible .content-wrapper p.p-animate-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .highlight {
+        color: #b41c51; /* 요청대로 색상 적용 */
+        font-weight: bold;
+        position: relative;
+        display: inline-block;
+        padding: 0 3px;
+      }
+
+      /* 강조 효과 추가 */
+      .highlight::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #b41c51;
+        transform: scaleX(0);
+        transform-origin: bottom right;
+        transition: transform 0.3s ease-out;
+      }
+
+      .scroll-animate.visible .highlight::after {
+        transform: scaleX(1);
+        transform-origin: bottom left;
+        transition-delay: 0.7s;
+      }
+
+      /* --- Motto Section --- */
+      .motto {
+        font-style: normal;
+        color: var(--main-accent-color);
+        font-weight: 900;
+        font-size: 2.2em;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 30px 20px;
+        line-height: 1.4;
+        text-shadow: 0 0 10px rgba(180, 28, 81, 0.7),
+          0 0 20px rgba(180, 28, 81, 0.5);
+        /* 초기 상태 */
+        opacity: 0;
+        transform: scale(0.7);
+        transition: opacity 0.7s ease-out 0.2s,
+          transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s; /* 속도 개선 */
+        animation: glowing-motto 3s infinite ease-in-out;
+        animation-play-state: paused;
+        will-change: transform, opacity;
+      }
+      .event-section:last-child .content-wrapper {
+        /* 마지막 섹션 wrapper 스타일 제거 */
+        background: none;
+        box-shadow: none;
+        padding: 0;
+        border-radius: 0;
+        max-width: none;
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      .scroll-animate.visible .motto {
+        opacity: 1;
+        transform: scale(1);
+        animation-play-state: running;
+      }
+      @keyframes glowing-motto {
+        0%,
+        100% {
+          text-shadow: 0 0 10px rgba(180, 28, 81, 0.7),
+            0 0 20px rgba(180, 28, 81, 0.5);
+        }
+        50% {
+          text-shadow: 0 0 15px rgba(180, 28, 81, 0.9),
+            0 0 30px rgba(180, 28, 81, 0.7), 0 0 40px rgba(180, 28, 81, 0.4);
+        }
+      }
+
+      /* --- 배경 효과 추가 --- */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(180, 28, 81, 0.15),
+          transparent 70%
+        );
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      /* 인증하기 버튼 스타일 */
+      .verify-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background-color: var(--main-accent-color);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 12px 25px;
+        font-size: 1rem;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(180, 28, 81, 0.4);
+        cursor: pointer;
+        display: none; /* 초기에는 숨김 */
+        z-index: 100;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s ease, transform 0.5s ease,
+          background-color 0.3s;
+      }
+
+      .verify-button.show {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .verify-button:hover {
+        background-color: #d02263;
+        box-shadow: 0 6px 20px rgba(180, 28, 81, 0.6);
+        transform: translateY(-2px);
+      }
+
+      .verify-button:active {
+        transform: translateY(1px);
+      }
+
+      /* 버튼 아이콘 */
+      .verify-button::before {
+        content: "✓";
+        margin-right: 8px;
+      }
+
+      /* --- Responsive --- (이전과 동일) */
+      @media (max-width: 768px) {
+        /* ... */
+
+        /* 모바일에서 버튼 크기 조정 */
+        .verify-button {
+          bottom: 20px;
+          right: 20px;
+          padding: 10px 20px;
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="event-container">
+      <!-- Hero Section -->
+      <section class="event-section hero-section scroll-animate">
+        <div class="logo-perspective-container">
+          <img
+            src="이터니티 티어 로고.webp"
+            alt="이터니티 티어 로고"
+            class="eternity-logo"
+          />
+        </div>
+        <h1 data-text-split>이터널리턴 시즌7<br />이터니티 마무리 이벤트</h1>
+        <p class="subtitle">
+          시즌7의 정점을 향한 당신의 빛나는 여정을 응원합니다!
+        </p>
+      </section>
+
+      <!-- Content Section 1 -->
+      <section class="event-section content-section scroll-animate">
+        <div class="content-wrapper">
+          <p>
+            안녕하십니까! 이 방에서 부방장을 맡고 있는
+            <strong class="highlight">광복절</strong>이라고 합니다.
+          </p>
+          <p>
+            다들 시즌7 루미아섬 여행 잘 하고 계시나요?<br />저는 천천히
+            루미아섬을 산책하고 있습니다. 😊
+          </p>
+        </div>
+      </section>
+
+      <!-- Content Section 2 -->
+      <section class="event-section content-section scroll-animate">
+        <div class="content-wrapper">
+          <p>이렇게 공지를 쓰는 이유는,</p>
+          <p>
+            자그마한 이벤트 하나를 진행해볼까 해서<br />눈치를 살짝 보며
+            작성하게 되었습니다!
+          </p>
+          <p style="font-size: 0.9em; color: var(--text-muted-color)">
+            (글 작성하고 랭크 시작한 지 5일 정도밖에 되지 않았는데요 👀)
+          </p>
+        </div>
+      </section>
+
+      <!-- Content Section 3 -->
+      <section
+        id="section3"
+        class="event-section content-section scroll-animate"
+      >
+        <div class="content-wrapper">
+          <p>
+            이번 시즌이 끝나고,<br />최종 티어가
+            <strong class="highlight">"이터니티"</strong>로 마무리하신
+            선생님들께서는
+          </p>
+          <p>
+            <strong class="highlight">광복절</strong>에게 개인 톡으로<br /><strong
+              class="highlight"
+              >본인 이터니티 티어 인증용 사진</strong
+            >을 보내주세요!
+          </p>
+          <p>
+            확인 후,<br /><strong class="highlight"
+              >✨ 카카오쇼핑 전용 상품권 5만원권 ✨</strong
+            ><br />을 드리겠습니다!
+          </p>
+        </div>
+      </section>
+
+      <!-- Content Section 4 -->
+      <section class="event-section content-section scroll-animate">
+        <div class="content-wrapper">
+          <p>얼마 안 되는 푼돈이긴 하지만,<br />혹시 모르지 않나요?</p>
+          <p>
+            선생님들께서 <strong class="highlight">이터니티</strong>를 달성해<br />보상을
+            받을 수 있을지?
+          </p>
+          <p>여러분의 도전을 진심으로 응원하겠습니다! 🔥</p>
+        </div>
+      </section>
+
+      <!-- Motto Section -->
+      <section class="event-section content-section scroll-animate">
+        <div class="content-wrapper">
+          <p class="motto">[ 절망에 다다른 폰에게 모든 영광을.! ]</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 인증하기 버튼 -->
+    <a
+      href="https://open.kakao.com/o/s7S8s4Q"
+      target="_blank"
+      class="verify-button"
+      >인증하기</a
+    >
+
+    <script>
+      // --- Text Split Function (이전과 동일) ---
+      function splitTextIntoSpans(selector) {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((element) => {
+          if (element.hasAttribute("data-text-split-init")) return;
+          let originalHTML = element.innerHTML;
+          element.textContent = "";
+          const brPlaceholder = "___BR___";
+          originalHTML = originalHTML.replace(/<br\s*\/?>/gi, brPlaceholder);
+          let charIndex = 0;
+          originalHTML.split(brPlaceholder).forEach((line, lineIndex) => {
+            if (lineIndex > 0)
+              element.appendChild(document.createElement("br"));
+            line.split(/(\s+)/).forEach((word) => {
+              if (word.trim().length > 0) {
+                const wordSpan = document.createElement("span");
+                wordSpan.style.display = "inline-block";
+                word.split("").forEach((char) => {
+                  const charSpan = document.createElement("span");
+                  charSpan.className = "char";
+                  charSpan.textContent = char;
+                  charSpan.style.transitionDelay = `${charIndex * 0.03}s`;
+                  wordSpan.appendChild(charSpan);
+                  charIndex++;
+                });
+                element.appendChild(wordSpan);
+              } else if (word.length > 0) {
+                element.appendChild(document.createTextNode(word));
+              }
+            });
+          });
+          element.setAttribute("data-text-split-init", "true");
+        });
+      }
+
+      // --- Intersection Observer for Animations ---
+      const scrollElements = document.querySelectorAll(".scroll-animate");
+
+      const observerOptions = {
+        root: null,
+        rootMargin: "-10px", // 조금 일찍 활성화
+        threshold: 0.15, // 감지 임계값 낮춤 (15%)
+      };
+
+      const observerCallback = (entries, observer) => {
+        entries.forEach((entry) => {
+          const targetElement = entry.target;
+
+          if (entry.isIntersecting) {
+            // 화면에 들어옴
+            console.log("Intersecting:", targetElement.className); // 디버깅 로그 추가
+            targetElement.classList.add("visible");
+
+            // Content Section 내부 P 태그 Stagger 애니메이션 처리
+            // Hero 섹션과 마지막 섹션은 제외
+            if (
+              targetElement.classList.contains("content-section") &&
+              !targetElement.classList.contains("hero-section") &&
+              targetElement !== scrollElements[scrollElements.length - 1] &&
+              !targetElement.hasAttribute("data-p-animated")
+            ) {
+              const contentWrapper =
+                targetElement.querySelector(".content-wrapper");
+              // contentWrapper가 먼저 나타난 후 p 태그 애니메이션 시작
+              // 딜레이 시간 단축
+              const wrapperTransitionDuration = 0.6; // content-wrapper transition 시간
+              const wrapperDelay = 0.2; // content-wrapper 시작 지연
+              const pInitialDelay = wrapperTransitionDuration + wrapperDelay; // p 시작 전 총 대기 시간
+
+              const paragraphs = contentWrapper.querySelectorAll("p");
+              console.log(
+                `Found ${paragraphs.length} paragraphs in`,
+                targetElement.className
+              ); // 디버깅 로그
+
+              paragraphs.forEach((p, index) => {
+                const delay = pInitialDelay + index * 0.1; // 각 p 태그 순차 딜레이 단축
+                p.style.transitionDelay = `${delay}s`;
+                p.classList.add("p-animate-visible"); // 애니메이션 활성화 클래스 추가
+                console.log(`Applying delay ${delay}s to p[${index}]`); // 디버깅 로그
+              });
+              targetElement.setAttribute("data-p-animated", "true"); // 중복 실행 방지
+            }
+
+            // 한 번 실행 후 관찰 중지 (선택 사항)
+            // observer.unobserve(targetElement);
+          } else {
+            // 화면에서 나감 (애니메이션 초기화 필요 시 주석 해제)
+            // if (targetElement.classList.contains('visible')) {
+            //     console.log('Out of view:', targetElement.className); // 디버깅 로그
+            //     targetElement.classList.remove('visible');
+            //     if (targetElement.hasAttribute('data-p-animated')) {
+            //         targetElement.removeAttribute('data-p-animated');
+            //         targetElement.querySelectorAll('.content-wrapper p').forEach(p => {
+            //             p.classList.remove('p-animate-visible');
+            //             p.style.transitionDelay = '0s';
+            //         });
+            //     }
+            // }
+          }
+        });
+      };
+
+      const observer = new IntersectionObserver(
+        observerCallback,
+        observerOptions
+      );
+
+      scrollElements.forEach((el) => {
+        observer.observe(el);
+      });
+
+      // --- 쿠키 관련 함수 ---
+      function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+          const date = new Date();
+          date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+          expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + value + expires + "; path=/";
+      }
+
+      function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(";");
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) === " ") c = c.substring(1);
+          if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length);
+        }
+        return null;
+      }
+
+      // --- 인증 버튼 처리 ---
+      function handleVerifyButton() {
+        const section3 = document.getElementById("section3");
+        const verifyButton = document.querySelector(".verify-button");
+
+        // 섹션3에 대한 Observer 설정
+        const section3Observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                // 섹션3이 보일 때 버튼 표시
+                setTimeout(() => {
+                  verifyButton.classList.add("show");
+                  // 버튼을 봤다는 정보를 쿠키에 저장 (30일간 유효)
+                  setCookie("sawVerifyButton", "true", 30);
+                }, 1000); // 컨텐츠가 나타난 후 약간의 딜레이를 두고 버튼 표시
+
+                // 이 섹션에 대한 관찰 중지 (한번만 실행)
+                section3Observer.unobserve(section3);
+              }
+            });
+          },
+          { threshold: 0.5 }
+        ); // 섹션의 50%가 보일 때 활성화
+
+        section3Observer.observe(section3);
+
+        // 이미 버튼을 본 적이 있다면 페이지 로드 시 바로 표시
+        if (getCookie("sawVerifyButton") === "true") {
+          verifyButton.classList.add("show");
+        }
+      }
+
+      // --- Initialize all functions ---
+      document.addEventListener("DOMContentLoaded", () => {
+        try {
+          splitTextIntoSpans("h1[data-text-split]");
+        } catch (error) {
+          console.error("Error splitting text:", error);
+        }
+
+        // 인증 버튼 처리 초기화
+        handleVerifyButton();
+
+        // 페이지 로드 시 이미 보이는 요소들 즉시 활성화 (스크롤 없이 보이는 경우)
+        scrollElements.forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          // 요소의 상단이 뷰포트 하단보다 위에 있고, 요소의 하단이 뷰포트 상단보다 아래에 있으면 보임
+          if (rect.top < window.innerHeight && rect.bottom >= 0) {
+            if (!el.classList.contains("visible")) {
+              console.log(
+                "Activating on load (already visible):",
+                el.className
+              ); // 디버깅 로그
+              // Observer 콜백을 직접 호출하는 대신 클래스만 추가하고 필요한 로직 수행
+              el.classList.add("visible");
+
+              // 즉시 활성화된 content-section의 p 태그 애니메이션도 처리
+              if (
+                el.classList.contains("content-section") &&
+                !el.classList.contains("hero-section") &&
+                el !== scrollElements[scrollElements.length - 1] &&
+                !el.hasAttribute("data-p-animated")
+              ) {
+                const contentWrapper = el.querySelector(".content-wrapper");
+                const pInitialDelay = 0.6 + 0.2; // 단축된 wrapper transition + delay
+                const paragraphs = contentWrapper.querySelectorAll("p");
+                paragraphs.forEach((p, index) => {
+                  const delay = pInitialDelay + index * 0.1; // 딜레이 단축
+                  p.style.transitionDelay = `${delay}s`;
+                  p.classList.add("p-animate-visible");
+                });
+                el.setAttribute("data-p-animated", "true");
+              }
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
